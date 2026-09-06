@@ -19,12 +19,18 @@ print_lock = threading.Lock()  # 打印锁，解决多线程输出乱码
 
 def scan_single_port(target, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(0.5)
+    s.settimeout(1)
     try:
         s.connect((target, port))
         banner = ""
         try:
-            s.sendall(b"\r\n")
+            # 判断是否http类端口
+            if port in {80, 443, 8080, 8888}:
+                payload = b"GET / HTTP/1.1\r\nHost:" + target.encode() + b"\r\nConnection:close\r\n\r\n"
+                s.sendall(payload)
+            else:
+                s.sendall(b"\r\n")
+
             banner = s.recv(1024).decode("utf-8", errors="ignore").strip()
         except (TimeoutError, OSError):
             pass
@@ -42,9 +48,8 @@ def scan_single_port(target, port):
     finally:
         s.close()
 
-def scan_port(target, start_port, end_port):
+def scan_port(target, start_port, end_port, max_workers):
     open_ports = []
-    max_workers = 100
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         port_range = range(start_port, end_port + 1)

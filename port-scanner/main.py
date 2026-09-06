@@ -29,10 +29,18 @@ def main():
         help="结束端口，默认：1000"
     )
 
+    parser.add_argument(
+        "-w", "--workers",
+        type=int,
+        default=100, 
+        help="并发线程数，默认100"
+        )
+
     args = parser.parse_args()
     target = args.target
     start_port = args.start
     end_port = args.end
+    max_workers = args.workers
 
     MIN_PORT = 1
     MAX_PORT = 65535
@@ -53,7 +61,7 @@ def main():
     print(f"[*] 端口范围：{start_port} ~ {end_port}")
     start_time = time.time()
 
-    open_ports = scan_port(target, start_port, end_port)
+    open_ports = scan_port(target, start_port, end_port, max_workers)
     
     elapsed = time.time() - start_time
 
