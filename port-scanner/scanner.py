@@ -22,10 +22,20 @@ def scan_single_port(target, port):
     s.settimeout(0.5)
     try:
         s.connect((target, port))
-        # 拿到锁，只有拿到锁的线程才能print
+        banner = ""
+        try:
+            s.sendall(b"\r\n")
+            banner = s.recv(1024).decode("utf-8", errors="ignore").strip()
+        except (TimeoutError, OSError):
+            pass
+
         with print_lock:
             service = port_service.get(port, "Unknown")
-            print(f"[+] 端口 {port} ({service}) 开放")
+            if banner:
+                print(f"[+] 端口 {port} ({service}) 开放")
+                print(f"    Banner: {banner}")
+            else:
+                print(f"[+] 端口 {port} ({service}) 开放")
         return port
     except (ConnectionRefusedError, TimeoutError, OSError):
         return None
