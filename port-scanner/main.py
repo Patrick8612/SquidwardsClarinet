@@ -38,6 +38,7 @@ def main():
         )
 
     args = parser.parse_args()
+    
     target = args.target
     start_port = args.start
     end_port = args.end
@@ -84,12 +85,65 @@ def main():
         )
     
     elapsed = time.time() - start_time
-
+# 扫描结果
     if not open_ports:
         print("[-] 在指定端口范围内没有发现开放端口")
-   
+    else:
+        print("[*] 扫描结果：")
+
+        for result in open_ports:
+            port = result["port"]
+            service = result["service"]
+            banner = result["banner"]
+
+            if banner:
+                print(f"[+] 端口 {port} ({service}) 开放")
+                print(f"    Banner: {banner[:200]}")
+            else:
+                print(f"[+] 端口 {port} ({service}) 开放")
+ 
     print(f"[*] 共发现 {len(open_ports)} 个开放端口")
     print(f"[*] 扫描耗时：{elapsed:.2f} 秒")
+ # 保存扫描结果
+    try:
+        with open("scan_result.txt", "w", encoding="utf-8") as f:
+            f.write("Python TCP 端口扫描器扫描结果\n")
+            f.write("=" * 40 + "\n\n")
+
+            f.write(f"目标：{target}\n")
+            f.write(f"解析 IP：{target_ip}\n")
+            f.write(f"端口范围：{start_port} ~ {end_port}\n")
+            f.write(f"并发线程数：{max_workers}\n")
+            f.write(f"扫描耗时：{elapsed:.2f} 秒\n\n")
+
+            f.write("开放端口：\n")
+            f.write("-" * 40 + "\n")
+
+            if not open_ports:
+                f.write("没有发现开放端口\n")
+            else:
+                for result in open_ports:
+                    port = result["port"]
+                    service = result["service"]
+                    banner = result["banner"]
+
+                    f.write(f"端口：{port}\n")
+                    f.write(f"服务：{service}\n")
+
+                    if banner:
+                        f.write(f"Banner：{banner[:200]}\n")
+                    else:
+                        f.write("Banner：无\n")
+
+                    f.write("\n")
+
+            f.write(f"共发现 {len(open_ports)} 个开放端口\n")
+
+        print("[*] 扫描结果已保存到 scan_result.txt")
+
+    except OSError as e:
+        print(f"[-] 保存扫描结果失败：{e}")
+
     print("[*] 扫描完成")
 
 if __name__ == "__main__":

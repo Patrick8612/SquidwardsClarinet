@@ -42,7 +42,11 @@ def scan_single_port(target, port):
                 print(f"    Banner: {banner}")
             else:
                 print(f"[+] 端口 {port} ({service}) 开放")
-        return port
+        return {
+            "port": port,
+            "service": service,
+            "banner": banner
+        }
     except (ConnectionRefusedError, TimeoutError, OSError):
         return None
     finally:
@@ -62,5 +66,5 @@ def scan_port(target, start_port, end_port, max_workers):
             if res is not None:
                 open_ports.append(res)
 
-    open_ports.sort()
+    open_ports.sort(key=lambda x: x["port"])
     return open_ports
