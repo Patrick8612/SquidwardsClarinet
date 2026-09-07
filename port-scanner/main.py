@@ -1,6 +1,7 @@
 import time
 import argparse
 import sys
+import socket
 
 from scanner import scan_port
 
@@ -42,6 +43,13 @@ def main():
     end_port = args.end
     max_workers = args.workers
 
+# DNS解析
+    try:
+        target_ip = socket.gethostbyname(target)
+    except socket.gaierror:
+        print(f"[-] 无法解析目标：{target}")
+        sys.exit(1)
+
     MIN_PORT = 1
     MAX_PORT = 65535
     # 检查起始端口
@@ -57,11 +65,23 @@ def main():
         print("[-] 起始端口不能大于结束端口")
         sys.exit(1)
 
+    # 检查线程数量
+    if not (1 <= max_workers <= 1000):
+        print("[-] 线程数量非法，范围必须是 1~1000")
+        sys.exit(1)
+
     print(f"[*] 开始扫描目标：{target}")
+    print(f"[*] 解析 IP：{target_ip}")
     print(f"[*] 端口范围：{start_port} ~ {end_port}")
+    print(f"[*] 并发线程数：{max_workers}")
     start_time = time.time()
 
-    open_ports = scan_port(target, start_port, end_port, max_workers)
+    open_ports = scan_port(
+        target_ip,
+        start_port, 
+        end_port, 
+        max_workers
+        )
     
     elapsed = time.time() - start_time
 
